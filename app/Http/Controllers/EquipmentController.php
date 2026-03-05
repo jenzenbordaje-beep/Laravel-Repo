@@ -12,14 +12,25 @@ class EquipmentController extends Controller
     public function index()
     {
         $query = Equipment::query();
-        
-        // Employees can only see available equipment
-        if (Auth::user()->isEmployee()) {
-            $query->where('status', 'available')->where('is_archived', false);
+
+        // handle optional archived filter (admins/superadmins only)
+        if (request()->query('archived')) {
+            if (!Auth::user()->isAdmin() && !Auth::user()->isSuperAdmin()) {
+                abort(403);
+            }
+            $query->where('is_archived', true);
+        } else {
+            // default behaviour: hide archived items
+            $query->where('is_archived', false);
+
+            // regular employees only see available equipment
+            if (Auth::user()->isEmployee()) {
+                $query->where('status', 'available');
+            }
         }
-        
+
         $equipment = $query->paginate(15);
-        
+
         return view('equipment.index', ['equipment' => $equipment]);
     }
 
@@ -117,5 +128,28 @@ class EquipmentController extends Controller
         ]);
 
         return redirect()->route('equipment.index')->with('success', 'Equipment archived successfully');
+    }
+
+    public function restore(Equipment $equipment)
+    {
+        if (!Auth::user()->isAdmin() && !Auth::user()->isSuperAdmin()) {
+            abort(403);
+        }
+
+        $equipment->update([
+            'is_archived' => false,
+            'archived_at' => null,
+            'status' => 'available',
+        ]);
+
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'restore',
+            'entity_type' => 'equipment',
+            'entity_id' => $equipment->id,
+            'description' => "Restored equipment: {$equipment->name}",
+        ]);
+
+        return redirect()->route('equipment.index', ['archived' => 1])->with('success', 'Equipment restored successfully');
     }
 }

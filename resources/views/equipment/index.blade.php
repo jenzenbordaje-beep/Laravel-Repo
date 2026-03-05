@@ -12,7 +12,7 @@
 
     <div class="card">
         <div class="card-header bg-primary text-white">
-            <h5>Equipment List</h5>
+            <h5>{{ request()->query('archived') ? 'Archived Equipment' : 'Equipment List' }}</h5>
         </div>
         <div class="card-body">
             @if($equipment->count())
@@ -49,11 +49,18 @@
                                     <td>
                                         <a href="{{ route('equipment.show', $item) }}" class="btn btn-sm btn-info">View</a>
                                         @if(Auth::user()->isAdmin() || Auth::user()->isSuperAdmin())
-                                            <a href="{{ route('equipment.edit', $item) }}" class="btn btn-sm btn-warning">Edit</a>
-                                            <form action="{{ route('equipment.archive', $item) }}" method="POST" style="display: inline;">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Archive this equipment?')">Archive</button>
-                                            </form>
+                                            @if(request()->query('archived'))
+                                                <form action="{{ route('equipment.restore', $item) }}" method="POST" style="display: inline;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Restore this equipment?')">Restore</button>
+                                                </form>
+                                            @else
+                                                <a href="{{ route('equipment.edit', $item) }}" class="btn btn-sm btn-warning">Edit</a>
+                                                <form action="{{ route('equipment.archive', $item) }}" method="POST" style="display: inline;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Archive this equipment?')">Archive</button>
+                                                </form>
+                                            @endif
                                         @endif
                                     </td>
                                 </tr>

@@ -39,6 +39,21 @@
             background-color: #3498db;
             border-left: 4px solid #2980b9;
         }
+
+        /* dropdown submenu links indentation */
+        .sidebar .collapse a {
+            padding-left: 40px;
+        }
+
+        /* toggle buttons show arrow */
+        .sidebar button.sidebar-toggle::after {
+            content: '▾';
+            float: right;
+            transition: transform 0.2s;
+        }
+        .sidebar button.sidebar-toggle[aria-expanded="true"]::after {
+            transform: rotate(180deg);
+        }
         .navbar-brand {
             padding: 0 20px;
             font-weight: bold;
@@ -133,27 +148,42 @@
 
         @if(Auth::user()->isEmployee())
             <div class="section-title">Employee</div>
-            <a href="{{ route('equipment.index') }}" class="@if(Route::currentRouteName() == 'equipment.index') active @endif">📋 View Equipment</a>
+            <a href="{{ route('equipment.index') }}" class="@if(Route::currentRouteName() == 'equipment.index') active @endif">📋 Available Equipment</a>
             <a href="{{ route('requests.create') }}" class="@if(Route::currentRouteName() == 'requests.create') active @endif">➕ Request Equipment</a>
             <a href="{{ route('requests.index') }}" class="@if(Route::currentRouteName() == 'requests.index') active @endif">📝 My Requests</a>
             <a href="{{ route('activity-logs.index') }}" class="@if(Route::currentRouteName() == 'activity-logs.index') active @endif">📜 Activity Log</a>
         @endif
 
-        @if(Auth::user()->isAdmin())
-            <div class="section-title">Admin</div>
-            <a href="{{ route('equipment.index') }}" class="@if(Route::currentRouteName() == 'equipment.index') active @endif">📋 Equipment</a>
-            <a href="{{ route('equipment.create') }}" class="@if(Route::currentRouteName() == 'equipment.create') active @endif">➕ Add Equipment</a>
-            <a href="{{ route('requests.index') }}" class="@if(Route::currentRouteName() == 'requests.index') active @endif">✅ Approve Requests</a>
-            <a href="{{ route('activity-logs.index') }}" class="@if(Route::currentRouteName() == 'activity-logs.index') active @endif">📜 Activity Logs</a>
-        @endif
+        @php
+            $showAdminModules = Auth::user()->isAdmin() || Auth::user()->isSuperAdmin();
+        @endphp
 
-        @if(Auth::user()->isSuperAdmin())
-            <div class="section-title">Super Admin</div>
-            <a href="{{ route('admin.users.index') }}" class="@if(Route::currentRouteName() == 'admin.users.index') active @endif">👥 Manage Users</a>
-            <a href="{{ route('admin.users.create') }}" class="@if(Route::currentRouteName() == 'admin.users.create') active @endif">➕ Create User</a>
-            <a href="{{ route('equipment.index') }}" class="@if(Route::currentRouteName() == 'equipment.index') active @endif">📋 Equipment</a>
-            <a href="{{ route('requests.index') }}" class="@if(Route::currentRouteName() == 'requests.index') active @endif">✅ All Requests</a>
-            <a href="{{ route('activity-logs.index') }}" class="@if(Route::currentRouteName() == 'activity-logs.index') active @endif">📜 Activity Logs</a>
+        @if($showAdminModules)
+            <div class="section-title">Administration</div>
+
+            <!-- Employee Module dropdown -->
+            <button class="sidebar-toggle @if(in_array(Route::currentRouteName(), ['admin.users.create','requests.index','activity-logs.index'])) active @endif"
+                    data-bs-toggle="collapse" data-bs-target="#employeeModule" aria-expanded="{{ in_array(Route::currentRouteName(), ['admin.users.create','requests.index','activity-logs.index']) ? 'true' : 'false' }}">
+                👥 Employee Module
+            </button>
+            <div class="collapse @if(in_array(Route::currentRouteName(), ['admin.users.index','admin.users.create','requests.index','activity-logs.index'])) show @endif" id="employeeModule">
+                @if(Auth::user()->isSuperAdmin())
+                    <a href="{{ route('admin.users.create') }}" class="@if(Route::currentRouteName() == 'admin.users.create') active @endif">➕ Create User</a>
+                @endif
+                <a href="{{ route('requests.index') }}" class="@if(Route::currentRouteName() == 'requests.index') active @endif">✅ Approve Requests</a>
+                <a href="{{ route('activity-logs.index') }}" class="@if(Route::currentRouteName() == 'activity-logs.index') active @endif">📜 Activity Logs</a>
+            </div>
+
+            <!-- Equipment Module dropdown -->
+            <button class="sidebar-toggle @if(in_array(Route::currentRouteName(), ['equipment.index','equipment.create'])) active @endif"
+                    data-bs-toggle="collapse" data-bs-target="#equipmentModule" aria-expanded="{{ in_array(Route::currentRouteName(), ['equipment.index','equipment.create']) ? 'true' : 'false' }}">
+                📦 Equipment Module
+            </button>
+            <div class="collapse @if(in_array(Route::currentRouteName(), ['equipment.index','equipment.create'])) show @endif" id="equipmentModule">
+                <a href="{{ route('equipment.index') }}" class="@if(Route::currentRouteName() == 'equipment.index') active @endif">📋 View / Edit Equipment</a>
+                <a href="{{ route('equipment.create') }}" class="@if(Route::currentRouteName() == 'equipment.create') active @endif">➕ Add Equipment</a>
+                <a href="{{ route('equipment.index', ['archived' => 1]) }}" class="@if(request()->query('archived')) active @endif">🗄️ Archived Equipment</a>
+            </div>
         @endif
 
         <div class="section-title">Account</div>
