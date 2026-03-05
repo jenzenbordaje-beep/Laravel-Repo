@@ -13,7 +13,7 @@ use App\Models\User;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    // if no users exist at all, show the welcome component one last time.
+    
     if (User::count() === 0) {
         return Inertia::render('Welcome', [
             'canRegister' => Features::enabled(Features::registration()),
